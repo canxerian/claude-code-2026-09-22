@@ -58,26 +58,32 @@ alter table public.profiles enable row level security;
 alter table public.habits enable row level security;
 alter table public.habit_logs enable row level security;
 
+-- auth.uid() is wrapped in a subselect so Postgres evaluates it once per
+-- query instead of once per row (RLS initplan optimization).
 create policy "profiles: select own" on public.profiles
-  for select using (auth.uid() = id);
+  for select using ((select auth.uid()) = id);
 create policy "profiles: update own" on public.profiles
-  for update using (auth.uid() = id);
+  for update using ((select auth.uid()) = id);
 -- no insert/delete policy: profile rows are created only by the trigger
 
 create policy "habits: select own" on public.habits
-  for select using (auth.uid() = user_id);
+  for select using ((select auth.uid()) = user_id);
 create policy "habits: insert own" on public.habits
-  for insert with check (auth.uid() = user_id);
+  for insert with check ((select auth.uid()) = user_id);
 create policy "habits: update own" on public.habits
-  for update using (auth.uid() = user_id);
+  for update using ((select auth.uid()) = user_id);
 create policy "habits: delete own" on public.habits
-  for delete using (auth.uid() = user_id);
+  for delete using ((select auth.uid()) = user_id);
 
 create policy "habit_logs: select own" on public.habit_logs
-  for select using (auth.uid() = user_id);
+  for select using ((select auth.uid()) = user_id);
 create policy "habit_logs: insert own" on public.habit_logs
-  for insert with check (auth.uid() = user_id);
+  for insert with check ((select auth.uid()) = user_id);
 create policy "habit_logs: delete own" on public.habit_logs
-  for delete using (auth.uid() = user_id);
+  for delete using ((select auth.uid()) = user_id);
 -- no update policy needed: a log row is either present (done) or absent
 -- (not done) for a given day; toggling off is a delete, not an update
+
+-- handle_new_user() is SECURITY DEFINER and only meant to run via the
+-- trigger above; revoke direct RPC execution.
+revoke execute on function public.handle_new_user() from public, anon, authenticated;
