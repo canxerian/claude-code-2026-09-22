@@ -1,4 +1,15 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Health is a [Next.js](https://nextjs.org) app for tracking daily walking step counts, using [Supabase](https://supabase.com) for login and data storage.
+
+## Setup
+
+Create a `.env.local` file with your Supabase project's URL and publishable (anon) key:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<publishable-or-anon-key>
+```
+
+The database needs a `steps` table (`user_id`, `date`, `step_count`) with row-level security restricting each user to their own rows — see the `create_steps_table` migration applied to the project.
 
 ## Getting Started
 
